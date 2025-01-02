@@ -173,8 +173,8 @@ async function completeTask(taskId) {
             return;
         }
 
-        // Add task to completed tasks
-        const completedResponse = await fetch('/completed-tasks', {
+        // Send task to complete endpoint
+        const completeResponse = await fetch('/complete', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -182,29 +182,16 @@ async function completeTask(taskId) {
             body: JSON.stringify(task)
         });
 
-        if (!completedResponse.ok) {
-            alert('Error adding task to completed tasks');
-            return;
-        }
+        const result = await completeResponse.json();
 
-        // Delete the task
-        const deleteResponse = await fetch('/delete', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: taskId })
-        });
-
-        const result = await deleteResponse.json();
-
-        if (deleteResponse.ok && result.status === 'success') {
-            await loadTasks();
+        if (completeResponse.ok && result.status === 'success') {
+            await loadTasks(); // Refresh the task list
         } else {
-            alert('Error deleting task: ' + (result.message || 'Unknown error'));
+            alert('Error completing task: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
         alert('Error completing task. Please try again.');
+        console.error('Error:', error);
     }
 }
 async function deleteTask(taskId) {

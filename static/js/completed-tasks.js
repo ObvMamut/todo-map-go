@@ -1,6 +1,6 @@
 async function loadCompletedTasks() {
     try {
-        const response = await fetch('/completed-tasks');
+        const response = await fetch('/completed-data.json'); // Changed endpoint to fetch from JSON file
         const tasks = await response.json();
 
         const tableBody = document.getElementById('completedTasksTableBody');
@@ -17,7 +17,17 @@ async function loadCompletedTasks() {
         });
     } catch (error) {
         console.error('Error loading completed tasks:', error);
+        // Add user-friendly error message
+        const tableBody = document.getElementById('completedTasksTableBody');
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="error-message">
+                    Failed to load completed tasks. Please try again later.
+                </td>
+            </tr>
+        `;
     }
 }
 
-loadCompletedTasks();
+// Load tasks when the page loads
+document.addEventListener('DOMContentLoaded', loadCompletedTasks);

@@ -138,6 +138,72 @@ func getTasks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tasks)
 }
 
+func completeTask(w http.ResponseWriter, r *http.Request) {
+	var input Task
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Read completed tasks
+	var completedTasks []Task
+	completedData, err := ioutil.ReadFile("completed-data.json")
+	if err == nil {
+		json.Unmarshal(completedData, &completedTasks)
+	}
+
+	// Add to completed tasks
+	completedTasks = append(completedTasks, input)
+
+	// Save to completed-data.json
+	jsonData, err := json.MarshalIndent(completedTasks, "", "    ")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := ioutil.WriteFile("completed-data.json", jsonData, 0644); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Delete from active tasks
+	var tasks []Task
+	data, err := ioutil.ReadFile("data.json")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(data, &tasks); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Remove the task from active tasks
+	newTasks := []Task{}
+	for _, task := range tasks {
+		if task.ID != input.ID {
+			newTasks = append(newTasks, task)
+		}
+	}
+
+	// Save updated active tasks
+	jsonData, err = json.MarshalIndent(newTasks, "", "    ")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := ioutil.WriteFile("data.json", jsonData, 0644); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
 func main() {
 	router := mux.NewRouter()
 
@@ -145,6 +211,7 @@ func main() {
 	router.HandleFunc("/save", saveTask).Methods("POST")
 	router.HandleFunc("/delete", deleteTask).Methods("POST")
 	router.HandleFunc("/tasks", getTasks).Methods("GET")
+	router.HandleFunc("/complete", completeTask).Methods("POST")
 
 	// Serve static files
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
