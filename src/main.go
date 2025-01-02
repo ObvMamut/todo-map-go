@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type Task struct {
@@ -204,21 +205,49 @@ func completeTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
 
+func addSecurityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Add security headers
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+
+		// Set correct MIME type for JavaScript files
+		if strings.HasSuffix(r.URL.Path, ".js") {
+			w.Header().Set("Content-Type", "application/javascript")
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func saveLocation(w http.ResponseWriter, r *http.Request) {
 	var location struct {
-		Lat float64 `json:"lat"`
-		Lon float64 `json:"lon"`
+		Lat       float64 `json:"lat"`
+		Lon       float64 `json:"lon"`
+		Timestamp string  `json:"timestamp"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&location); err != nil {
-		log.Printf("Error decoding location: %v", err)
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("Error reading request body: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("Received location: Latitude %f, Longitude %f\n", location.Lat, location.Lon)
-	w.WriteHeader(http.StatusNoContent)
+	if err := json.Unmarshal(body, &location); err != nil {
+		log.Printf("Error decoding location JSON: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("[%s] Background location update from %s: Lat: %f, Lon: %f",
+		location.Timestamp,
+		r.RemoteAddr,
+		location.Lat,
+		location.Lon)
+
+	w.WriteHeader(http.StatusOK)
 }
+
 func main() {
 	router := mux.NewRouter()
 
@@ -229,9 +258,20 @@ func main() {
 	router.HandleFunc("/complete", completeTask).Methods("POST")
 	router.HandleFunc("/location", saveLocation).Methods("POST")
 
-	// Serve static files
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
+	// Add headers middleware inline
+	router.PathPrefix("/").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Add security headers and correct MIME types
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		if strings.HasSuffix(r.URL.Path, ".js") {
+			w.Header().Set("Content-Type", "application/javascript")
+		}
 
+		// Log the request
+		log.Printf("Request: %s %s", r.Method, r.URL.Path)
+
+		// Serve static files
+		http.FileServer(http.Dir("static")).ServeHTTP(w, r)
+	}))
 	// Start HTTPS server
 	fmt.Println("Starting server on https://0.0.0.0:8443")
 	log.Fatal(http.ListenAndServeTLS(":8443", "cert.crt", "cert.key", router))

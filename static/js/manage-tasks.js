@@ -269,5 +269,47 @@ function cancelTask() {
     selectedLocation = null;
 }
 
+
+// Add this to your manage-tasks.js
+function updateTrackingStatus(isTracking) {
+    const statusElement = document.getElementById('trackingStatus');
+    if (statusElement) {
+        statusElement.textContent = isTracking ? 'Location tracking active' : 'Location tracking inactive';
+        statusElement.className = isTracking ? 'status-active' : 'status-inactive';
+    }
+}
+
+function toggleLocationTracking() {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+            type: document.getElementById('trackingToggle').checked ? 'START_TRACKING' : 'STOP_TRACKING'
+        });
+    }
+}
+
+// Add this when the page loads
+window.addEventListener('load', () => {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'GET_STATUS' });
+    }
+});
+
+navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data) {
+        switch (event.data.type) {
+            case 'TRACKING_STATUS':
+                document.getElementById('trackingToggle').checked = event.data.isTracking;
+                updateTrackingStatus(event.data.isTracking);
+                break;
+            case 'TRACKING_STARTED':
+                updateTrackingStatus(true);
+                break;
+            case 'TRACKING_STOPPED':
+                updateTrackingStatus(false);
+                break;
+        }
+    }
+});
+
 initializeMap(0, 0);
 requestLocationPermission();

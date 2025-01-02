@@ -126,3 +126,20 @@ body {
     color: #dc3545;
 }
 
+.tracking-controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #2c2c3e;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1000;
+}
+
+.status-active {
+    color: #28c812;
+}
+
+.status-inactive {
+    color: #dc3545;
+}
