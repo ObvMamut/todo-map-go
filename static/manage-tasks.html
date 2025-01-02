@@ -6,6 +6,19 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <link rel="stylesheet" href="/css/styles.css" />
+
+  <link rel="manifest" href="/manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/src/service-worker.js')
+              .then((registration) => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+              }, (error) => {
+                console.log('ServiceWorker registration failed: ', error);
+              });
+    }
+  </script>
+
 </head>
 <body>
 <div id="locationStatus" class="location-status" style="display: none;">

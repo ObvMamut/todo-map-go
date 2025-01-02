@@ -204,6 +204,21 @@ func completeTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
 
+func saveLocation(w http.ResponseWriter, r *http.Request) {
+	var location struct {
+		Lat float64 `json:"lat"`
+		Lon float64 `json:"lon"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&location); err != nil {
+		log.Printf("Error decoding location: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("Received location: Latitude %f, Longitude %f\n", location.Lat, location.Lon)
+	w.WriteHeader(http.StatusNoContent)
+}
 func main() {
 	router := mux.NewRouter()
 
@@ -212,6 +227,7 @@ func main() {
 	router.HandleFunc("/delete", deleteTask).Methods("POST")
 	router.HandleFunc("/tasks", getTasks).Methods("GET")
 	router.HandleFunc("/complete", completeTask).Methods("POST")
+	router.HandleFunc("/location", saveLocation).Methods("POST")
 
 	// Serve static files
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
