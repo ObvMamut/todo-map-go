@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Task Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+<div id="locationStatus" class="location-status" style="display: none;">
+  Detecting your location...
+</div>
+<div id="map"></div>
+<div class="task-input" id="taskForm" style="display: none;">
+  <input type="text" id="taskName" placeholder="Enter task name">
+  <input type="datetime-local" id="taskDueTime">
+  <button onclick="saveTask()">Save Task</button>
+  <button onclick="cancelTask()">Cancel</button>
+</div>
+
+<h2>Tasks List</h2>
+<table class="tasks-table">
+  <thead>
+  <tr>
+    <th>Task Name</th>
+    <th>Due Time</th>
+    <th>Latitude</th>
+    <th>Longitude</th>
+    <th>Actions</th>
+  </tr>
+  </thead>
+  <tbody id="tasksTableBody">
+  </tbody>
+</table>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script src="/js/manage-tasks.js"></script>
+</body>
+</html>
