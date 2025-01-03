@@ -1,33 +1,53 @@
-async function loadCompletedTasks() {
-    try {
-        const response = await fetch('/completed-data.json'); // Changed endpoint to fetch from JSON file
-        const tasks = await response.json();
+document.addEventListener('DOMContentLoaded', function() {
+    // Get reference to the table body
+    const tableBody = document.getElementById('completedTasksTableBody');
 
-        const tableBody = document.getElementById('completedTasksTableBody');
-        tableBody.innerHTML = '';
+    // Fetch the completed tasks data
+    fetch('/completed-data.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Clear the loading message
+            tableBody.innerHTML = '';
 
-        tasks.forEach(task => {
-            const row = tableBody.insertRow();
-            row.innerHTML = `
-                <td>${task.name}</td>
-                <td>${new Date(task.due_time).toLocaleString()}</td>
-                <td>${task.lat.toFixed(6)}</td>
-                <td>${task.lon.toFixed(6)}</td>
-            `;
+            // Check if data is empty
+            if (!data || data.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="error-message">No completed tasks found.</td>
+                    </tr>`;
+                return;
+            }
+
+            // Add each task to the table
+            data.forEach(task => {
+                const row = document.createElement('tr');
+
+                // Format the date to be more readable
+                const dueDate = new Date(task.due_time);
+                const formattedDate = dueDate.toLocaleString();
+
+                row.innerHTML = `
+                    <td>${task.name}</td>
+                    <td>${formattedDate}</td>
+                    <td>${task.lat}</td>
+                    <td>${task.lon}</td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching completed tasks:', error);
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="error-message">
+                        Error loading completed tasks. Please try again later.
+                    </td>
+                </tr>`;
         });
-    } catch (error) {
-        console.error('Error loading completed tasks:', error);
-        // Add user-friendly error message
-        const tableBody = document.getElementById('completedTasksTableBody');
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="4" class="error-message">
-                    Failed to load completed tasks. Please try again later.
-                </td>
-            </tr>
-        `;
-    }
-}
-
-// Load tasks when the page loads
-document.addEventListener('DOMContentLoaded', loadCompletedTasks);
+});

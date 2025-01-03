@@ -149,7 +149,7 @@ func completeTask(w http.ResponseWriter, r *http.Request) {
 
 	// Read completed tasks
 	var completedTasks []Task
-	completedData, err := ioutil.ReadFile("completed-data.json")
+	completedData, err := ioutil.ReadFile("static/completed-data.json")
 	if err == nil {
 		json.Unmarshal(completedData, &completedTasks)
 	}
@@ -164,7 +164,7 @@ func completeTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ioutil.WriteFile("completed-data.json", jsonData, 0644); err != nil {
+	if err := ioutil.WriteFile("static/completed-data.json", jsonData, 0644); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -270,6 +270,6 @@ func main() {
 		http.FileServer(http.Dir("static")).ServeHTTP(w, r)
 	}))
 
-	fmt.Println("Starting server on http://0.0.0.0:8080")
-	log.Fatal(http.ListenAndServe("0.0.0.0:8080", router))
+	fmt.Println("Starting server on https://0.0.0.0:8080")
+	log.Fatal(http.ListenAndServeTLS(":8080", "localhost.crt", "localhost.key", router))
 }

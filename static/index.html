@@ -2,35 +2,104 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home Page</title>
   <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2c2c3e);
+      color: #e0e0e0;
+    }
 
-  <link rel="manifest" href="/manifest.json">
+    .hero {
+      text-align: center;
+      padding: 100px 20px;
+      background: linear-gradient(to right, #007bff, #6610f2);
+      color: #fff;
+      border-bottom: 4px solid #444;
+    }
 
+    .hero h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      font-size: 1.2em;
+      margin-bottom: 40px;
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .button-container button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 15px 25px;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .button-container button:hover {
+      background-color: #0056b3;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      padding: 20px;
+      background: #2c2c3e;
+      color: #e0e0e0;
+      font-size: 0.9em;
+    }
+
+    .footer a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-  <h1>Welcome to the Task Management App</h1>
+<div class="hero">
+  <h1>Todo Map Task Management Tool</h1>
+  <p>Dla Mamy</p>
   <div class="button-container">
     <button onclick="window.location.href='manage-tasks.html'">Manage TODO</button>
     <button onclick="window.location.href='completed-tasks.html'">Manage Completed Tasks</button>
   </div>
+</div>
 
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+              console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            })
+            .catch(error => {
+              console.error('ServiceWorker registration failed: ', error);
+            });
+  } else {
+    console.log('Service workers are not supported');
+  }
+</script>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js')
-              .then(registration => {
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-              })
-              .catch(error => {
-                console.error('ServiceWorker registration failed: ', error);
-              });
-    } else {
-      console.log('Service workers are not supported');
-    }
-  </script>
-
+<div class="footer">
+  <p>Page created by <a href="https://github.com/ObvMamut" target="_blank">ObvMamut</a></p>
 </div>
 </body>
 </html>

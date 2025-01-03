@@ -2,56 +2,47 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Completed Tasks</title>
-    <link rel="stylesheet" href="/css/styles.css" />
-    <style>
-        .error-message {
-            color: red;
-            text-align: center;
-            padding: 1rem;
-        }
-        .loading {
-            text-align: center;
-            padding: 1rem;
-            font-style: italic;
-        }
-    </style>
-
-    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/css/styles.css"> <!-- Link to the CSS file -->
 
 </head>
 <body>
 <h1>Completed Tasks</h1>
-<table class="tasks-table">
+<table class="tasks-table" id="completed-tasks">
     <thead>
     <tr>
-        <th>Task Name</th>
-        <th>Due Time</th>
+        <th>ID</th>
+        <th>Name</th>
         <th>Latitude</th>
         <th>Longitude</th>
+        <th>Due Time</th>
     </tr>
     </thead>
-    <tbody id="completedTasksTableBody">
-    <tr>
-        <td colspan="4" class="loading">Loading completed tasks...</td>
-    </tr>
+    <tbody id="tasksTableBody">
+    <!-- Data will be inserted here -->
     </tbody>
 </table>
-<script src="/js/completed-tasks.js"></script>
 
 <script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(registration => {
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            })
-            .catch(error => {
-                console.error('ServiceWorker registration failed: ', error);
+    // Fetch the JSON data
+    fetch('../completed-data.json')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#completed-tasks tbody');
+            data.forEach(task => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                        <td>${task.id}</td>
+                        <td>${task.name}</td>
+                        <td>${task.lat}</td>
+                        <td>${task.lon}</td>
+                        <td>${task.due_time}</td>
+                    `;
+                tbody.appendChild(row);
             });
-    } else {
-        console.log('Service workers are not supported');
-    }
+        })
+        .catch(error => console.error('Error fetching data:', error));
 </script>
-
 </body>
 </html>
