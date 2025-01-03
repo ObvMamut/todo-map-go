@@ -1,72 +1,51 @@
-// Debug version of service-worker.js
-const VERSION = 'v1';
-console.log('Service Worker Loaded');
+const DATA_URL = '/data.json'; // URL to your data.json file
 
-let ws = null;
-let intervalId = null;
-
-function connectWebSocket() {
-    // Use the same host as the page, but with ws:// protocol
-    const wsUrl = `ws://${self.location.host}/ws`;
-    ws = new WebSocket(wsUrl);
-
-    ws.onopen = () => {
-        console.log('WebSocket connected');
-        startPeriodicMessages();
-    };
-
-    ws.onclose = () => {
-        console.log('WebSocket disconnected');
-        // Try to reconnect after 5 seconds
-        setTimeout(connectWebSocket, 5000);
-        if (intervalId) {
-            clearInterval(intervalId);
-            intervalId = null;
-        }
-    };
-
-    ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-    };
-
-    ws.onmessage = (event) => {
-        console.log('Received message from server:', event.data);
-    };
-}
-
-async function startPeriodicMessages() {
-    if (intervalId) return;
-
-    try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        const ip = data.ip;
-
-        intervalId = setInterval(() => {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(`HELLO SERVER ${ip}`);
-            }
-        }, 2000);
-
-        console.log('Started periodic messages');
-    } catch (error) {
-        console.error('Error getting IP:', error);
+// Function to fetch and check the data
+async function checkDueTimes() {
+  try {
+    // Fetch the data.json file
+    const response = await fetch(DATA_URL);
+    if (!response.ok) {
+      throw new Error('Failed to fetch tasks');
     }
+
+    // Parse the JSON data
+    const tasks = await response.json();
+
+    // Get the current time
+    const now = new Date();
+
+    // Iterate through each task
+    tasks.forEach(task => {
+      const dueTime = new Date(task.due_time);
+
+      // Calculate the difference in milliseconds
+      const timeDifference = dueTime - now;
+
+      // Check if the due time is less than 30 minutes from now
+      if (timeDifference > 0 && timeDifference <= 30 * 60 * 1000) {
+        // Show a notification
+        showNotification(task);
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching or processing data:', error);
+  }
 }
 
-self.addEventListener('install', (event) => {
-    console.log('Service Worker installing.');
-    self.skipWaiting();
-});
+// Function to show a notification
+function showNotification(task) {
+  self.registration.showNotification('Task Reminder', {
+    body: `Task "${task.name}" is due soon!`,
+    icon: '/icons/icon-192x192.png', // Replace with your icon path
+    badge: '/icons/icon-192x192.png' // Replace with your badge path
+  });
+}
 
-self.addEventListener('activate', (event) => {
-    console.log('Service Worker activated.');
-    event.waitUntil(Promise.all([
-        clients.claim(),
-        connectWebSocket()
-    ]));
-});
+// Periodically check the due times (e.g., every 5 minutes)
+setInterval(checkDueTimes, 1 * 60 * 1000);
 
-self.addEventListener('fetch', (event) => {
-    event.respondWith(fetch(event.request));
+// Initial check when the service worker is activated
+self.addEventListener('activate', event => {
+  event.waitUntil(checkDueTimes());
 });

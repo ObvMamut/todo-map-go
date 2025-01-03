@@ -43,6 +43,28 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script src="/js/manage-tasks.js"></script>
 
+<script>
+
+  // Request notification permission
+  function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+      console.log('This browser does not support notifications.');
+      return;
+    }
+
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        console.log('Notification permission granted.');
+      } else {
+        console.log('Notification permission denied.');
+      }
+    });
+  }
+
+  // Call this function when the page loads
+  requestNotificationPermission();
+
+</script>
 
 <script>
   if ('serviceWorker' in navigator) {

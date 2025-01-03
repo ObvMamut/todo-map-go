@@ -143,3 +143,48 @@ body {
 .status-inactive {
     color: #dc3545;
 }
+
+/* Add this to your existing styles.css */
+@media (max-width: 768px) {
+    .hero {
+        padding: 50px 10px;
+    }
+
+    .hero h1 {
+        font-size: 2em;
+    }
+
+    .hero p {
+        font-size: 1em;
+    }
+
+    .button-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .button-container button {
+        width: 100%;
+        padding: 10px;
+    }
+
+    #map {
+        height: 300px;
+    }
+
+    .task-input {
+        top: 10px;
+        right: 10px;
+        padding: 10px;
+    }
+
+    .tasks-table th, .tasks-table td {
+        padding: 8px;
+        font-size: 0.9em;
+    }
+
+    .action-button {
+        padding: 3px 6px;
+        font-size: 0.8em;
+    }
+}

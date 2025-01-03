@@ -112,6 +112,11 @@ function initializeMap(lat, lon) {
         tomorrow.setMinutes(tomorrow.getMinutes() - tomorrow.getTimezoneOffset());
         document.getElementById('taskDueTime').value = tomorrow.toISOString().slice(0, 16);
     });
+
+    // Ensure map is touch-friendly
+    map.touchZoom.enable();
+    map.doubleClickZoom.disable(); // Disable double-click zoom for better touch experience
+
 }
 
 async function loadTasks() {

@@ -6,6 +6,7 @@
     <title>Completed Tasks</title>
     <link rel="stylesheet" href="/css/styles.css"> <!-- Link to the CSS file -->
 
+    <link rel="manifest" href="/manifest.json">
 </head>
 <body>
 <h1>Completed Tasks</h1>
@@ -23,6 +24,29 @@
     <!-- Data will be inserted here -->
     </tbody>
 </table>
+
+<script>
+
+    // Request notification permission
+    function requestNotificationPermission() {
+        if (!('Notification' in window)) {
+            console.log('This browser does not support notifications.');
+            return;
+        }
+
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log('Notification permission granted.');
+            } else {
+                console.log('Notification permission denied.');
+            }
+        });
+    }
+
+    // Call this function when the page loads
+    requestNotificationPermission();
+
+</script>
 
 <script>
     // Fetch the JSON data

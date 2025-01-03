@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home Page</title>
   <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="manifest" href="/manifest.json">
   <style>
     body {
       margin: 0;
@@ -84,6 +85,55 @@
   </div>
 </div>
 
+
+
+<script>
+  // Add this to your existing script in index.html
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    const installButton = document.createElement('button');
+    installButton.textContent = 'Install App';
+    installButton.style.position = 'fixed';
+    installButton.style.bottom = '20px';
+    installButton.style.right = '20px';
+    installButton.style.zIndex = '1000';
+    installButton.style.padding = '10px 20px';
+    installButton.style.backgroundColor = '#007bff';
+    installButton.style.color = '#fff';
+    installButton.style.border = 'none';
+    installButton.style.borderRadius = '5px';
+    installButton.style.cursor = 'pointer';
+    document.body.appendChild(installButton);
+
+    installButton.addEventListener('click', () => {
+      event.prompt();
+      installButton.style.display = 'none';
+    });
+  });
+</script>
+<script>
+
+  // Request notification permission
+  function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+      console.log('This browser does not support notifications.');
+      return;
+    }
+
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        console.log('Notification permission granted.');
+      } else {
+        console.log('Notification permission denied.');
+      }
+    });
+  }
+
+  // Call this function when the page loads
+  requestNotificationPermission();
+
+</script>
+
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js')
@@ -97,6 +147,8 @@
     console.log('Service workers are not supported');
   }
 </script>
+
+
 
 <div class="footer">
   <p>Page created by <a href="https://github.com/ObvMamut" target="_blank">ObvMamut</a></p>

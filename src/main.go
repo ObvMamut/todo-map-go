@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	_ "time"
 )
 
 type Task struct {
@@ -31,6 +32,10 @@ type DeleteTask struct {
 	ID string `json:"id"`
 }
 
+type NotifyTask struct {
+	ID string `json:"id"`
+}
+
 func saveTask(w http.ResponseWriter, r *http.Request) {
 	var input TaskInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -40,7 +45,7 @@ func saveTask(w http.ResponseWriter, r *http.Request) {
 
 	// Read existing tasks
 	var tasks []Task
-	data, err := ioutil.ReadFile("data.json")
+	data, err := ioutil.ReadFile("static/data.json")
 	if err == nil {
 		json.Unmarshal(data, &tasks)
 	}
@@ -64,7 +69,7 @@ func saveTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ioutil.WriteFile("data.json", jsonData, 0644); err != nil {
+	if err := ioutil.WriteFile("static/data.json", jsonData, 0644); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -82,7 +87,7 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 
 	// Read existing tasks
 	var tasks []Task
-	data, err := ioutil.ReadFile("data.json")
+	data, err := ioutil.ReadFile("static/data.json")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -120,7 +125,7 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ioutil.WriteFile("data.json", jsonData, 0644); err != nil {
+	if err := ioutil.WriteFile("static/data.json", jsonData, 0644); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -131,7 +136,7 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 
 func getTasks(w http.ResponseWriter, r *http.Request) {
 	var tasks []Task
-	data, err := ioutil.ReadFile("data.json")
+	data, err := ioutil.ReadFile("static/data.json")
 	if err == nil {
 		json.Unmarshal(data, &tasks)
 	}
@@ -171,7 +176,7 @@ func completeTask(w http.ResponseWriter, r *http.Request) {
 
 	// Delete from active tasks
 	var tasks []Task
-	data, err := ioutil.ReadFile("data.json")
+	data, err := ioutil.ReadFile("static/data.json")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -197,7 +202,7 @@ func completeTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ioutil.WriteFile("data.json", jsonData, 0644); err != nil {
+	if err := ioutil.WriteFile("static/data.json", jsonData, 0644); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -242,6 +247,19 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func notifyTask(w http.ResponseWriter, r *http.Request) {
+	var input NotifyTask
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("Task with ID %s is due in less than 30 minutes", input.ID)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
 func main() {
 	router := mux.NewRouter()
 
@@ -253,6 +271,9 @@ func main() {
 
 	// Add WebSocket endpoint
 	router.HandleFunc("/ws", handleWebSocket)
+
+	// Add notification endpoint
+	router.HandleFunc("/notify", notifyTask).Methods("POST")
 
 	// Service Worker route
 	router.HandleFunc("/service-worker.js", func(w http.ResponseWriter, r *http.Request) {
@@ -270,6 +291,7 @@ func main() {
 		http.FileServer(http.Dir("static")).ServeHTTP(w, r)
 	}))
 
-	fmt.Println("Starting server on https://0.0.0.0:8080")
-	log.Fatal(http.ListenAndServeTLS(":8080", "localhost.crt", "localhost.key", router))
+	fmt.Println("Starting server on https://127.0.0.1:8080")
+	log.Fatal(http.ListenAndServe(":8080", router))
+	//log.Fatal(http.ListenAndServeTLS(":8080", "localhost.crt", "localhost.key", router))
 }
