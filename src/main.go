@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -205,30 +206,70 @@ func completeTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
 
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true // Be careful with this in production
+	},
+}
+
+func handleWebSocket(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("WebSocket upgrade failed: %v", err)
+		return
+	}
+	defer conn.Close()
+
+	// Log client connection
+	log.Printf("New WebSocket client connected from %s", conn.RemoteAddr())
+
+	// Keep connection alive and handle messages
+	for {
+		messageType, p, err := conn.ReadMessage()
+		if err != nil {
+			log.Printf("Error reading message: %v", err)
+			return
+		}
+
+		// Log received message
+		log.Printf("Received message from %s: %s", conn.RemoteAddr(), string(p))
+
+		// Echo the message back (optional)
+		if err := conn.WriteMessage(messageType, p); err != nil {
+			log.Printf("Error writing message: %v", err)
+			return
+		}
+	}
+}
+
 func main() {
 	router := mux.NewRouter()
 
-	// API routes
+	// Existing routes
 	router.HandleFunc("/save", saveTask).Methods("POST")
 	router.HandleFunc("/delete", deleteTask).Methods("POST")
 	router.HandleFunc("/tasks", getTasks).Methods("GET")
 	router.HandleFunc("/complete", completeTask).Methods("POST")
 
-	// Add headers middleware inline
+	// Add WebSocket endpoint
+	router.HandleFunc("/ws", handleWebSocket)
+
+	// Service Worker route
+	router.HandleFunc("/service-worker.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript")
+		w.Header().Set("Service-Worker-Allowed", "/")
+		http.ServeFile(w, r, "static/service-worker.js")
+	})
+
+	// Static files handler
 	router.PathPrefix("/").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Add security headers and correct MIME types
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		if strings.HasSuffix(r.URL.Path, ".js") {
 			w.Header().Set("Content-Type", "application/javascript")
 		}
-
-		// Log the request
-		log.Printf("Request: %s %s", r.Method, r.URL.Path)
-
-		// Serve static files
 		http.FileServer(http.Dir("static")).ServeHTTP(w, r)
 	}))
 
-	fmt.Println("Starting server on https://0.0.0.0:8443")
-	log.Fatal(http.ListenAndServeTLS(":8443", "cert.crt", "cert.key", router))
+	fmt.Println("Starting server on http://0.0.0.0:8080")
+	log.Fatal(http.ListenAndServe("0.0.0.0:8080", router))
 }

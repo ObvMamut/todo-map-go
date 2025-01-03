@@ -17,6 +17,8 @@
         }
     </style>
 
+    <link rel="manifest" href="/manifest.json">
+
 </head>
 <body>
 <h1>Completed Tasks</h1>
@@ -36,5 +38,20 @@
     </tbody>
 </table>
 <script src="/js/completed-tasks.js"></script>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            })
+            .catch(error => {
+                console.error('ServiceWorker registration failed: ', error);
+            });
+    } else {
+        console.log('Service workers are not supported');
+    }
+</script>
+
 </body>
 </html>
