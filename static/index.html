@@ -5,63 +5,6 @@
   <title>Home Page</title>
   <link rel="stylesheet" href="/css/styles.css" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#2c2c3e">
-  <link rel="apple-touch-icon" href="/images/icon-192x192.png">
-
-  <!-- Add this to your HTML files -->
-  <!-- Add this to your HTML files -->
-  <link rel="manifest" href="/manifest.json">
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js')
-              .then(async (registration) => {
-                console.log('ServiceWorker registered');
-
-                // Request background permission
-                try {
-                  const status = await navigator.permissions.query({
-                    name: 'periodic-background-sync',
-                  });
-                  if (status.state === 'granted') {
-                    console.log('Background sync permitted');
-                  }
-                } catch (error) {
-                  console.error('Background sync not supported:', error);
-                }
-              })
-              .catch(error => {
-                console.error('ServiceWorker registration failed:', error);
-              });
-    }
-
-    // Handle location requests from service worker
-    navigator.serviceWorker.addEventListener('message', (event) => {
-      if (event.data.type === 'GET_LOCATION') {
-        navigator.geolocation.getCurrentPosition(
-                (position) => {
-                  const location = {
-                    lat: position.coords.latitude,
-                    lon: position.coords.longitude,
-                    timestamp: new Date().toISOString()
-                  };
-                  event.source.postMessage({
-                    type: 'LOCATION_UPDATE',
-                    location: location
-                  });
-                },
-                (error) => {
-                  console.error('Geolocation error:', error);
-                },
-                {
-                  enableHighAccuracy: true,
-                  timeout: 5000,
-                  maximumAge: 0
-                }
-        );
-      }
-    });
-  </script>
 </head>
 <body>
 <div class="container">
